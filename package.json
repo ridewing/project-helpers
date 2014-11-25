@@ -1,12 +1,9 @@
 {
   "name": "project-helpers",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Helper functions to assist in development process",
   "main": "./index.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:ridewing/project-helpers.git"
-  },
+  "repository": "git@github.com:ridewing/project-helpers.git",
   "author": "Nicklas Ridewing",
   "license": "MIT",
   "bugs": {
