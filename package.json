@@ -1,13 +1,21 @@
 {
   "name": "project-helpers",
   "version": "0.1.0",
-  "description": "Helper functions to assist in development process",
+  "description": "Helper functions to assist in development process with gulp based projects",
   "main": "./index.js",
-  "repository": "git@github.com:ridewing/project-helpers.git",
-  "author": "Nicklas Ridewing",
+  "homepage": "http://github.com/ridewing/project-helpers",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ridewing/project-helpers"
+  },
+  "author": {
+    "name": "Nicklas Ridewing",
+    "email": "contact@ridewing.se",
+    "url": "http://ridewing.se/"
+  },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/wearefractal/gulp-concat/issues"
+    "url": "https://github.com/ridewing/project-helpers/issues"
   },
   "dependencies": {
     "gulp": "~3.8.10",
