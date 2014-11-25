@@ -26,24 +26,21 @@
 		gutil		= require('gulp-util'),
 		path		= require('path');
 	
-	// Global properties
-	var globals = {};
-	
 	// Default settings
 	var settings = {
-		name 			: 'Unnamed Project-Helpers',
+		name			: 'Unnamed Project-Helpers',
 		
 		// Folders and structure
-		sourcePath 		: 'source/',
-		buildPath 		: 'build/',
-		componentsPath 	: 'components/',
-		stylesFolder 	: 'styles',
+		sourcePath		: 'source/',
+		buildPath		: 'build/',
+		componentsPath	: 'components/',
+		stylesFolder	: 'styles',
 		scriptsFolder	: 'scripts',
 		imagesFolder	: 'images',
 		
 		// Booleans
 		debug			: false,
-		typescript 		: false
+		typescript		: false
 	};
 	
 	var ProjectHelpers = function () {}
