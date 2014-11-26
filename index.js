@@ -40,6 +40,7 @@
 		stylesFolder	: 'styles',
 		scriptsFolder	: 'scripts',
 		imagesFolder	: 'images',
+		mainLessFile	: false,
 		
 		// Booleans
 		debug			: false,
@@ -161,7 +162,9 @@
 		gulp.task('ph-styles', function () {
 			var style = less().on("error", error("LESS"));
 			
-			gulp.src(self.paths.styles)
+			var lesssrc = (settings.mainLessFile) ? self.sourcePath + self.directories.styles + '/' + settings.mainLessFile: self.paths.styles;
+			
+			gulp.src(lesssrc)
 				.pipe(style)
 				.pipe(gulp.dest(self.buildPath + self.directories.styles))
 				.pipe(alert("LESS"));
