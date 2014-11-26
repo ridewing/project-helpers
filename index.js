@@ -11,9 +11,9 @@
 (function () {
 	'use strict';
 	
-	var version = "v0.1.0";
-	
-	var gulp		= require('gulp'),
+	// Load all external libs 
+	var packageInfo = require('./package.json'),
+		gulp		= require('gulp'),
 		typescript	= require('gulp-type'),
 		less		= require('gulp-less'),
 		imagemin	= require('gulp-imagemin'),
@@ -25,6 +25,9 @@
 		uglify 		= require('gulp-uglify'),
 		gutil		= require('gulp-util'),
 		path		= require('path');
+	
+	// Set version
+	var version = "v" + packageInfo.version;
 	
 	// Default settings
 	var settings = {
@@ -208,7 +211,7 @@
 	 */
 
 	function alert (msg) {
-		notify.logLevel(0);
+		notify.logLevel((settings.debug)?2:0);
 		
 		msg = "Completed: " + msg;
 		
