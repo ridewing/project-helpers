@@ -127,7 +127,7 @@
 				gulp.src(self.paths.scripts)
 					.pipe(sourcemaps.init())
 					.pipe(concat('main.min.js'))
-					.pipe(uglify())
+					.pipe(uglify().on("error", error("Scripts")))
 					.pipe(sourcemaps.write())
 					.pipe(gulp.dest(self.buildPath + self.directories.scripts))
 					.pipe(alert("Scripts"));
