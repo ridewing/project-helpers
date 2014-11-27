@@ -58,6 +58,12 @@
 	}
 
 	ProjectHelpers.prototype.registerComponent = function (name, path) {
+		
+		if (!path) {
+			var bowerFile = require(process.cwd() + '/' + this.componentsPath + name + '/bower.json');
+			path = bowerFile.main;
+		}
+		
 		this.components.push({
 			'name' : name,
 			'path' : this.componentsPath + name + '/' + path
