@@ -208,6 +208,12 @@
 		gulp.start(['ph-styles', 'ph-scripts', 'ph-components', 'ph-images']);
 	}
 	
+	ProjectHelpers.prototype.default = function () {
+		this.clean();
+		this.build();
+		this.watch();
+	}
+
 	function updateSettings (settingsObject) {
 		for(var i in settingsObject)
 		{
