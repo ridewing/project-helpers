@@ -40,6 +40,7 @@
 		stylesFolder	: 'styles',
 		scriptsFolder	: 'scripts',
 		imagesFolder	: 'images',
+		fontsFolder		: 'fonts',
 		mainLessFile	: false,
 		
 		// Booleans
@@ -78,7 +79,6 @@
 		gutil.log(gutil.colors.cyan('Running project: '+gutil.colors.white(settings.name)+', with the help of Project-Helper '+gutil.colors.white(version)));
 		gutil.beep();
 		
-		
 		this.name 			= settings.name;
 		this.sourcePath		= settings.sourcePath;
 		this.buildPath		= settings.buildPath;
@@ -87,19 +87,20 @@
 		this.directories = {
 			styles 		: settings.stylesFolder,
 			scripts 	: settings.scriptsFolder,
-			images 		: settings.imagesFolder
+			images 		: settings.imagesFolder,
+			fonts 		: settings.fontsFolder
 		};
 
 		this.paths = {
 			scripts		: this.sourcePath + this.directories.scripts + '/**/*' + ((settings.typescript)?'.ts':'.js'),
 			images		: this.sourcePath + this.directories.images + '/**/*',
-			styles 		: this.sourcePath + this.directories.styles + '/**/*.less'
+			styles 		: this.sourcePath + this.directories.styles + '/**/*.less',
+			fonts 		: this.sourcePath + this.directories.fonts + '/**/*'
 		};
 		
 		this.components = [];
 		
-		if(settings.typescript)
-		{
+		if (settings.typescript) {
 			var typescriptProject = typescript.createProject({
 				sortOutput			: true,
 				declarationFiles	: false,
@@ -107,8 +108,7 @@
 			});
 			
 			gulp.task('ph-typescript', function () {
-				var ts = gulp.src(self.paths.scripts)
-					.pipe(typescript(typescriptProject).on("error", error("Typescript")));
+				var ts = gulp.src(self.paths.scripts).pipe(typescript(typescriptProject).on("error", error("Typescript")));
 
 				return ts.js
 					.pipe(concat('main.min.js'))
@@ -134,8 +134,7 @@
 			}
 		});
 		
-		gulp.task('ph-components', function()
-		{
+		gulp.task('ph-components', function () {
 			var components = [];
 			
 			for(var key in self.components)
@@ -156,10 +155,9 @@
 					.pipe(alert("Components"));
 		});
 		
-		gulp.task('ph-images', function(event)
-		{
+		gulp.task('ph-images', function (event) {
 			gulp.src(self.paths.images)
-				.pipe(newer(self.buildPath + 'images'))
+				.pipe(newer(self.buildPath + self.directories.images))
 				.pipe(imagemin({optimizationLevel: 5}))
 				.pipe(gulp.dest(self.buildPath + self.directories.images))
 				.pipe(notify("Images"));
@@ -174,6 +172,12 @@
 				.pipe(style)
 				.pipe(gulp.dest(self.buildPath + self.directories.styles))
 				.pipe(alert("LESS"));
+		});
+		
+		gulp.task('ph-fonts', function () {
+			gulp.src(self.paths.fonts)
+				.pipe(gulp.dest(self.buildPath + self.directories.fonts))
+				.pipe(alert("Fonts"));
 		});
 		
 		gulp.task('ph-clean', function () {
@@ -194,18 +198,20 @@
 		gulp.watch(this.paths.scripts, 		['ph-scripts']);
 		gulp.watch(this.paths.images, 		['ph-images']);
 		gulp.watch(this.paths.styles, 		['ph-styles']);
+		gulp.watch(this.paths.fonts, 		['ph-fonts']);
 	}
 	
 	ProjectHelpers.prototype.clean = function () {
 		del([
-			this.buildPath + 'styles/**/*', 
-			this.buildPath + 'scripts/**/*', 
-			this.buildPath + 'images/**/*'
+			this.buildPath + this.directories.styles +'/**/*', 
+			this.buildPath + this.directories.scripts + '/**/*', 
+			this.buildPath + this.directories.image + '/**/*',
+			this.buildPath + this.directories.fonts + '/**/*'
 		], {force : true});
 	}
 	
 	ProjectHelpers.prototype.build = function () {
-		gulp.start(['ph-styles', 'ph-scripts', 'ph-components', 'ph-images']);
+		gulp.start(['ph-styles', 'ph-scripts', 'ph-components', 'ph-fonts', 'ph-images']);
 	}
 	
 	ProjectHelpers.prototype.default = function () {
@@ -242,7 +248,7 @@
 	function error (msg) {
 		return notify.onError({
 			title	: msg,
-			message : "<%= error.message %>",
+			message : "<%= error.message %> in <%= error.fileName %> line <%= error.lineNumber %>",
 			subtitle: settings.name,
 			icon	: false,
 			notifier : function (options, callback) {
