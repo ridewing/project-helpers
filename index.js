@@ -8,258 +8,116 @@
  * Date: 2014-11-22T17:11Z
  */
 
-(function () {
+var ProjectHelpers = function(settings) {
+
 	'use strict';
-	
-	// Load all external libs 
-	var packageInfo = require('./package.json'),
-		gulp		= require('gulp'),
-		typescript	= require('gulp-type'),
-		less		= require('gulp-less'),
-		imagemin	= require('gulp-imagemin'),
-		del			= require('del'),
-		notify		= require("gulp-notify"),
-		concat		= require("gulp-concat"),
-		sourcemaps	= require('gulp-sourcemaps'),
-		newer 		= require('gulp-newer'),
-		uglify 		= require('gulp-uglify'),
-		gutil		= require('gulp-util'),
-		path		= require('path');
-	
+
+	var packageInfo = require('./package.json');
+
+	// Load all external libs
+	var modules = {
+		gulp 		: require('gulp'),
+		del 		: require('del'),
+		notify 		: require("gulp-notify"),
+		gutil 		: require('gulp-util'),
+		path 		: require('path'),
+
+		// Styles
+		less 		: null,
+		sass 		: null,
+		stylus		: null,
+
+		// Scripts
+		concat 		: null,
+		sourcemaps 	: null,
+		uglify 		: null,
+
+		// Images
+		imagemin 	: null,
+		newer 		: null
+	};
+
 	// Set version
 	var version = "v" + packageInfo.version;
-	
+
 	// Default settings
-	var settings = {
-		name			: 'Unnamed Project-Helpers',
+	var defaults = {
+		name			: 'Unnamed Project',
 		
 		// Folders and structure
 		sourcePath		: 'source/',
 		buildPath		: 'build/',
-		componentsPath	: 'components/',
+		componentsPath	: 'source/components/',
+		styleType 		: 'less',
+
+		// Type folders
 		stylesFolder	: 'styles',
 		scriptsFolder	: 'scripts',
 		imagesFolder	: 'images',
 		fontsFolder		: 'fonts',
-		mainLessFile	: false,
+
+		mainStyleFile	: false,
 		
 		// Booleans
 		debug			: false,
-		typescript		: false
+
+		// Type flags (What types to handle)
+		enableScripts 	: true,
+		enableStyle 	: true,
+		enableImages 	: false,
+		enableFonts 	: false
 	};
-	
-	var ProjectHelpers = function () {}
 
-	ProjectHelpers.prototype.setSourcePath = function (path) {
-		this.sourcePath = path;
+	settings = _extend(defaults, settings);
+
+	modules.gutil.log(modules.gutil.colors.cyan('Running project: '+modules.gutil.colors.white(settings.name)+', with the help of Project-Helper '+modules.gutil.colors.white(version)));
+
+	// Register modules for scripts
+	if(settings.enableScripts){
+		modules.concat 		= require("gulp-concat");
+		modules.uglify 		= require('gulp-uglify');
+		modules.sourcemaps 	= require('gulp-sourcemaps');
 	}
 
-	ProjectHelpers.prototype.setBuildPath = function (path) {
-		this.buildPath = path;
-	}
-
-	ProjectHelpers.prototype.registerComponent = function (name, path) {
-		
-		if (!path) {
-			var bowerFile = require(process.cwd() + '/' + this.componentsPath + name + '/bower.json');
-			path = bowerFile.main;
+	// Register modules for style
+	if(settings.enableStyle){
+		if(settings.styleType == 'less'){
+			modules.less = require('gulp-less');
 		}
-		
-		this.components.push({
-			'name' : name,
-			'path' : this.componentsPath + name + '/' + path
-		});
-	}
-	
-	ProjectHelpers.prototype.setup = function (settingsObject) {
-		
-		var self = this;
-	
-		updateSettings(settingsObject);
-		gutil.log(gutil.colors.cyan('Running project: '+gutil.colors.white(settings.name)+', with the help of Project-Helper '+gutil.colors.white(version)));
-		gutil.beep();
-		
-		this.name 			= settings.name;
-		this.sourcePath		= settings.sourcePath;
-		this.buildPath		= settings.buildPath;
-		this.componentsPath	= settings.componentsPath;
-		
-		this.directories = {
-			styles 		: settings.stylesFolder,
-			scripts 	: settings.scriptsFolder,
-			images 		: settings.imagesFolder,
-			fonts 		: settings.fontsFolder
-		};
-
-		this.paths = {
-			scripts		: this.sourcePath + this.directories.scripts + '/**/*' + ((settings.typescript)?'.ts':'.js'),
-			images		: this.sourcePath + this.directories.images + '/**/*',
-			styles 		: this.sourcePath + this.directories.styles + '/**/*.less',
-			fonts 		: this.sourcePath + this.directories.fonts + '/**/*'
-		};
-		
-		this.components = [];
-		
-		if (settings.typescript) {
-			var typescriptProject = typescript.createProject({
-				sortOutput			: true,
-				declarationFiles	: false,
-				noExternalResolve	: false
-			});
-			
-			gulp.task('ph-typescript', function () {
-				var ts = gulp.src(self.paths.scripts).pipe(typescript(typescriptProject).on("error", error("Typescript")));
-
-				return ts.js
-					.pipe(concat('main.min.js'))
-					.pipe(gulp.dest(self.buildPath + self.directories.scripts))
-					.pipe(alert("Typescript"));
-			});
+		else if(settings.styleType == 'sass' || settings.styleType == 'scss'){
+			modules.sass = require('gulp-sass');
 		}
-		
-		gulp.task('ph-scripts', function () {
-			if(settings.typescript)
-			{
-				gulp.run('ph-typescript');
-			}
-			else
-			{	
-				gulp.src(self.paths.scripts)
-					.pipe(sourcemaps.init())
-					.pipe(concat('main.min.js'))
-					.pipe(uglify().on("error", error("Scripts")))
-					.pipe(sourcemaps.write())
-					.pipe(gulp.dest(self.buildPath + self.directories.scripts))
-					.pipe(alert("Scripts"));
-			}
-		});
-		
-		gulp.task('ph-components', function () {
-			var components = [];
-			
-			for(var key in self.components)
-			{
-				components.push(self.components[key].path);
-				
-				if(settings.debug)
-				{
-					console.log('Adding component:', self.components[key].name, '('+self.components[key].path+')');
-				}
-			}
-			
-			gulp.src(components)
-					.pipe(sourcemaps.init())
-					.pipe(concat('components.min.js'))
-					.pipe(sourcemaps.write())
-					.pipe(gulp.dest(self.buildPath + self.directories.scripts))
-					.pipe(alert("Components"));
-		});
-		
-		gulp.task('ph-images', function (event) {
-			gulp.src(self.paths.images)
-				.pipe(newer(self.buildPath + self.directories.images))
-				.pipe(imagemin({optimizationLevel: 5}))
-				.pipe(gulp.dest(self.buildPath + self.directories.images))
-				.pipe(notify("Images"));
-		});
-		
-		gulp.task('ph-styles', function () {
-			var style = less().on("error", error("LESS"));
-			
-			var lesssrc = (settings.mainLessFile) ? self.sourcePath + self.directories.styles + '/' + settings.mainLessFile: self.paths.styles;
-			
-			gulp.src(lesssrc)
-				.pipe(style)
-				.pipe(gulp.dest(self.buildPath + self.directories.styles))
-				.pipe(alert("LESS"));
-		});
-		
-		gulp.task('ph-fonts', function () {
-			gulp.src(self.paths.fonts)
-				.pipe(gulp.dest(self.buildPath + self.directories.fonts))
-				.pipe(alert("Fonts"));
-		});
-		
-		gulp.task('ph-clean', function () {
-			self.clean();
-		});
-	}
-	
-	ProjectHelpers.prototype.watch = function () {
-		
-		var components = [];
-			
-		for(var key in this.components)
-		{
-			components.push(this.components[key].path);
-		}
-		
-		gulp.watch(components, 				['ph-components']);
-		gulp.watch(this.paths.scripts, 		['ph-scripts']);
-		gulp.watch(this.paths.images, 		['ph-images']);
-		gulp.watch(this.paths.styles, 		['ph-styles']);
-		gulp.watch(this.paths.fonts, 		['ph-fonts']);
-	}
-	
-	ProjectHelpers.prototype.clean = function () {
-		del([
-			this.buildPath + this.directories.styles +'/**/*', 
-			this.buildPath + this.directories.scripts + '/**/*', 
-			this.buildPath + this.directories.image + '/**/*',
-			this.buildPath + this.directories.fonts + '/**/*'
-		], {force : true});
-	}
-	
-	ProjectHelpers.prototype.build = function () {
-		gulp.start(['ph-styles', 'ph-scripts', 'ph-components', 'ph-fonts', 'ph-images']);
-	}
-	
-	ProjectHelpers.prototype.default = function () {
-		this.clean();
-		this.build();
-		this.watch();
-	}
-
-	function updateSettings (settingsObject) {
-		for(var i in settingsObject)
-		{
-			settings[i] = settingsObject[i];
+		else if(settings.styleType == 'stylus'){
+			modules.stylus = require('gulp-stylus');
 		}
 	}
-	
+
+	// Register modules for images
+	if(settings.enableImages){
+		modules.newer 		= require("gulp-newer");
+		modules.imagemin 	= require('gulp-imagemin');
+	}
+
+	if(settings.enableFonts){
+		// Nothing special to register, we just copy the files
+	}
+
+	var project = require('./Project.js')(modules, settings);
+
+	return project;
+
 	/*
 	 * Private functions
 	 */
+	function _extend (defaults, newObject) {
+		for(var i in newObject)
+		{
+			defaults[i] = newObject[i];
+		}
 
-	function alert (msg) {
-		notify.logLevel((settings.debug)?2:0);
-		
-		msg = "Completed: " + msg;
-		
-		gutil.log(gutil.colors.green(msg));
-		
-		return notify({
-        	title	: msg,
-			icon	: false,
-        	subtitle: settings.name
-		})
+		return defaults;
 	}
-	
-	function error (msg) {
-		return notify.onError({
-			title	: msg,
-			message : "<%= error.message %> in <%= error.fileName %> line <%= error.lineNumber %>",
-			subtitle: settings.name,
-			icon	: false,
-			notifier : function (options, callback) {
-				gutil.log(gutil.colors.red('Error with task: ' + options.title));
-				gutil.log(gutil.colors.white(options.message));
-				callback();
-			}	
-		})
-	}
-	
-	module.exports = new ProjectHelpers;
-	
-})();
+};
+
+module.exports = ProjectHelpers;
 
